@@ -9,19 +9,27 @@
     {
       "name": "fargate-container",
       "image": "253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app:latest",
+      "essential": true,
       "portMappings": [
         {
           "containerPort": 5000,
           "protocol": "tcp"
         }
       ],
-      "essential": true,
       "environment": [
         {
           "name": "ENV",
           "value": "prod"
         }
-      ]
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ecs-fargate-app",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
     }
   ]
 }

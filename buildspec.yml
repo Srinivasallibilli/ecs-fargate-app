@@ -1,29 +1,54 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_DEFAULT_REGION: us-east-1
+    REPOSITORY_NAME: ecs-fargate-app
+    REPOSITORY_URI: 253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app
+
 phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - set -e
+      - echo "Logging in to Amazon ECR..."
       - aws --version
-      - $(aws ecr get-login --no-include-email --region us-east-1)
-      - REPOSITORY_URI=253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - echo Repository URI is $REPOSITORY_URI
-      - echo Image tag is $IMAGE_TAG
+
+      - echo "Checking ECR repository..."
+      - |
+        if ! aws ecr describe-repositories --repository-names "$REPOSITORY_NAME" --region $AWS_DEFAULT_REGION > /dev/null 2>&1; then
+          echo "ECR repository does not exist. Creating..."
+          aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_DEFAULT_REGION
+        else
+          echo "ECR repository already exists."
+        fi
+
+      - echo "Authenticating Docker to ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+
+      - echo "Setting image tag..."
+      - IMAGE_TAG=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest} | cut -c 1-7)
+      - echo "Repository URI: $REPOSITORY_URI"
+      - echo "Image Tag: $IMAGE_TAG"
 
   build:
     commands:
-      - echo Building Docker image...
-      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      - set -e
+      - echo "Building Docker image..."
+      - docker build -t ${REPOSITORY_URI}:${IMAGE_TAG} .
+      - docker tag ${REPOSITORY_URI}:${IMAGE_TAG} ${REPOSITORY_URI}:latest
 
   post_build:
     commands:
-      - echo Pushing Docker image to ECR...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing image definitions file...
-      - printf '[{"name":"fargate-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - set -e
+      - echo "Pushing Docker images to ECR..."
+      - docker push ${REPOSITORY_URI}:${IMAGE_TAG}
+      - docker push ${REPOSITORY_URI}:latest
+      - echo "Writing imagedefinitions.json..."
+      - printf '[{"name":"fargate-container","imageUri":"%s"}]' ${REPOSITORY_URI}:${IMAGE_TAG} > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:
   files:
     - imagedefinitions.json
+
+
