@@ -11,7 +11,7 @@ phases:
       - set -e
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - echo "Checking if ECR repository exists..."
+      - echo "Checking ECR repository..."
       - >
         if ! aws ecr describe-repositories --repository-names "$REPOSITORY_NAME"
         --region $AWS_DEFAULT_REGION > /dev/null 2>&1; then
@@ -40,11 +40,10 @@ phases:
       - echo "Pushing Docker images to ECR..."
       - docker push ${REPOSITORY_URI}:${IMAGE_TAG}
       - docker push ${REPOSITORY_URI}:latest
-      - echo "Creating imagedefinitions.json for ECS..."
+      - echo "Writing imagedefinitions.json..."
       - printf '[{"name":"fargate-container","imageUri":"%s"}]'
         ${REPOSITORY_URI}:${IMAGE_TAG} > imagedefinitions.json
       - cat imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
-
