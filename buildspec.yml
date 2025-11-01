@@ -11,26 +11,14 @@ phases:
       - set -e
       - echo "Logging in to Amazon ECR..."
       - aws --version
-      - echo "Checking ECR repository..."
-      - >
-        if ! aws ecr describe-repositories --repository-names "$REPOSITORY_NAME"
-        --region $AWS_DEFAULT_REGION > /dev/null 2>&1; then
-          echo "ECR repository does not exist. Creating..."
-          aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_DEFAULT_REGION
-        else
-          echo "ECR repository already exists."
-        fi
       - echo "Authenticating Docker to ECR..."
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login
         --username AWS --password-stdin $REPOSITORY_URI
       - echo "Setting image tag..."
-      - >
-        IMAGE_TAG=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest} | cut -c
+      - IMAGE_TAG=$(echo ${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest} | cut -c
         1-7)
-
-        echo "Repository URI: $REPOSITORY_URI"
-
-        echo "Image Tag: $IMAGE_TAG"
+      - echo "Repository URI: $REPOSITORY_URI"
+      - echo "Image Tag: $IMAGE_TAG"
   build:
     commands:
       - set -e
@@ -44,13 +32,9 @@ phases:
       - docker push ${REPOSITORY_URI}:${IMAGE_TAG}
       - docker push ${REPOSITORY_URI}:latest
       - echo "Writing imagedefinitions.json..."
-      - >
-        printf '[{"name":"fargate-container","imageUri":"%s"}]'
+      - printf '[{"name":"fargate-container","imageUri":"%s"}]'
         ${REPOSITORY_URI}:${IMAGE_TAG} > imagedefinitions.json
-
-        cat imagedefinitions.json
+      - cat imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
-
-
