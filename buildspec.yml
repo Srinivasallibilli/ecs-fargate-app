@@ -11,6 +11,16 @@ phases:
       - set -e
       - echo "Logging in to Amazon ECR..."
       - aws --version
+      - echo "Checking if ECR repository exists..."
+      - >
+        if ! aws ecr describe-repositories --repository-names "$REPOSITORY_NAME"
+        --region $AWS_DEFAULT_REGION > /dev/null 2>&1; then
+          echo "ECR repository does not exist. Creating..."
+          aws ecr create-repository --repository-name $REPOSITORY_NAME --region $AWS_DEFAULT_REGION
+        else
+          echo "ECR repository already exists."
+        fi
+      - echo "Authenticating Docker to ECR..."
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login
         --username AWS --password-stdin $REPOSITORY_URI
       - echo "Setting image tag..."
@@ -30,10 +40,11 @@ phases:
       - echo "Pushing Docker images to ECR..."
       - docker push ${REPOSITORY_URI}:${IMAGE_TAG}
       - docker push ${REPOSITORY_URI}:latest
-      - echo "Writing imagedefinitions.json..."
+      - echo "Creating imagedefinitions.json for ECS..."
       - printf '[{"name":"fargate-container","imageUri":"%s"}]'
         ${REPOSITORY_URI}:${IMAGE_TAG} > imagedefinitions.json
       - cat imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
+
