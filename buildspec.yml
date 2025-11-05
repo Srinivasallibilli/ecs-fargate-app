@@ -3,8 +3,8 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-1
-    REPOSITORY_NAME: ecs-fargate-app
-    REPOSITORY_URI: 253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app
+    REPOSITORY_NAME: fargate-demo
+    REPOSITORY_URI: 253862056441.dkr.ecr.us-east-1.amazonaws.com/fargate-demo
 
 phases:
   pre_build:
