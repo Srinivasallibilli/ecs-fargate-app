@@ -1,1 +1,1 @@
-[{"name":"fargate-container","imageUri":"253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app:test123"}]
+[{"name":"ecs-fargate-container","imageUri":"253862056441.dkr.ecr.us-east-1.amazonaws.com/ecr-fargate-app:latest"}]
