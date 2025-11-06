@@ -1,14 +1,14 @@
 {
-  "family": "ecs-fargate-task",
+  "family": "ecs-new-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "256",
-  "memory": "512",
+  "cpu": "512",
+  "memory": "1024",
   "executionRoleArn": "arn:aws:iam::253862056441:role/ecsTaskExecutionRole",
   "containerDefinitions": [
     {
-      "name": "fargate-container",
-      "image": "253862056441.dkr.ecr.us-east-1.amazonaws.com/ecs-fargate-app:latest",
+      "name": "ecs-fargate-container",
+      "image": "253862056441.dkr.ecr.us-east-1.amazonaws.com/ecr-fargate-app:latest",
       "essential": true,
       "portMappings": [
         {
@@ -25,7 +25,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/ecs-fargate-app",
+          "awslogs-group": "/ecs/ecr-fargate-app",
           "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs"
         }
