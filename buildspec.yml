@@ -3,32 +3,26 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-1
-    REPOSITORY_NAME: ecr-fargate-app
     REPOSITORY_URI: 253862056441.dkr.ecr.us-east-1.amazonaws.com/ecr-fargate-app
 
 phases:
   pre_build:
     commands:
-      - echo "Starting pre_build phase..."
-      - echo "Resolving registry host from REPOSITORY_URI"
-      - 'REGISTRY=${REPOSITORY_URI%%/*}'
-      - echo "Registry host: $REGISTRY"
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REGISTRY
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - echo "Image Tag: $IMAGE_TAG"
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 253862056441.dkr.ecr.us-east-1.amazonaws.com
+      - IMAGE_TAG=latest
+      - echo "Image tag is $IMAGE_TAG"
 
   build:
     commands:
       - echo "Building Docker image..."
       - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
-      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo "Pushing Docker images to ECR..."
+      - echo "Pushing Docker image to ECR..."
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - docker push $REPOSITORY_URI:latest
-      - echo "Creating imagedefinitions.json..."
+      - echo "Creating imagedefinitions.json file..."
       - printf '[{"name":"ecs-fargate-container","imageUri":"%s"}]' "$REPOSITORY_URI:$IMAGE_TAG" > imagedefinitions.json
       - cat imagedefinitions.json
 
