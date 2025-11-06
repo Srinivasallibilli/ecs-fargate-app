@@ -9,8 +9,11 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+      - echo "Starting pre_build phase..."
+      - echo "Resolving registry host from REPOSITORY_URI"
+      - REGISTRY=${REPOSITORY_URI%%/*}
+      - echo "Registry host: $REGISTRY"
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REGISTRY
       - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - echo "Image Tag: $IMAGE_TAG"
 
